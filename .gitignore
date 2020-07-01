@@ -1,0 +1,14 @@
+### Vert.x ###
+.vertx/
+
+# IntelliJ
+/out/
+.idea
+*.iml
+modules.xml
+.idea/misc.xml
+*.ipr
+
+### Gradle ###
+.gradle
+build
