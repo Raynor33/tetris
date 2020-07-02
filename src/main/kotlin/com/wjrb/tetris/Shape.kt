@@ -1,3 +1,3 @@
 package com.wjrb.tetris
 
-data class Shape(val center: Point, val points: Set<Point>)
+data class Shape(val centreIndex: Int, val points: List<Point>)
