@@ -1,5 +1,6 @@
 package com.wjrb.tetris
 
+import junit.framework.AssertionFailedError
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.hamcrest.Matchers.nullValue
@@ -7,21 +8,20 @@ import org.junit.Test
 
 class BoardTest {
 
-    private val shape = Shape(
-        1,
-        listOfNotNull(
-            Point.of(2, 0),
-            Point.of(3, 0),
-            Point.of(4, 0),
-            Point.of(3, 1)
-        )
-    )
+    private val shape = Shape.T
     private val nextShape = { shape }
 
     @Test
     fun shouldStartWithAShape() {
         val board = Board.of(nextShape)
-        assertThat(board.points(), equalTo(shape.points.toSet()))
+        checkPointsAndRender(
+            board, setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1)
+            )
+        )
     }
 
     @Test
@@ -29,12 +29,15 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .left()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(1, 0),
-            Point.of(2, 0),
-            Point.of(3, 0),
-            Point.of(2, 1)
-        )))
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(3, 0),
+                Point(2, 1),
+                Point(3, 1),
+                Point(4, 1)
+            )
+        )
     }
 
     @Test
@@ -42,12 +45,15 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .right()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(3, 0),
-            Point.of(4, 0),
-            Point.of(5, 0),
-            Point.of(4, 1)
-        )))
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(5, 0),
+                Point(4, 1),
+                Point(5, 1),
+                Point(6, 1)
+            )
+        )
     }
 
     @Test
@@ -55,26 +61,31 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .down()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(2, 1),
-            Point.of(3, 1),
-            Point.of(4, 1),
-            Point.of(3, 2)
-        )))
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 1),
+                Point(3, 2),
+                Point(4, 2),
+                Point(5, 2)
+            )
+        )
     }
 
     @Test
     fun shouldTurnTheShape() {
         val board = Board
             .of(nextShape)
-            .down()
-            ?.turn()
-           assertThat(board?.points(), equalTo(setOf(
-            Point.of(3, 0),
-            Point.of(3, 1),
-            Point.of(3, 2),
-            Point.of(2, 1)
-        )))
+            .turn()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(4, 1),
+                Point(4, 2),
+                Point(5, 1)
+            )
+        )
     }
 
     @Test
@@ -82,12 +93,19 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .drop()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(2, 18),
-            Point.of(3, 18),
-            Point.of(4, 18),
-            Point.of(2, 19)
-        ) + shape))
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1),
+                Point(4, 18),
+                Point(3, 19),
+                Point(4, 19),
+                Point(5, 19)
+            )
+        )
     }
 
     @Test
@@ -95,27 +113,41 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .turn()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(2, 0),
-            Point.of(3, 0),
-            Point.of(4, 0),
-            Point.of(3, 1)
-        )))
+            ?.left()
+            ?.left()
+            ?.left()
+            ?.left()
+            ?.turn()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(0, 0),
+                Point(0, 1),
+                Point(0, 2),
+                Point(1, 1)
+            )
+        )
     }
 
     @Test
     fun shouldNotMoveTheShapeOffTheBoard() {
         val board = Board
             .of(nextShape)
-            .left()
+            .turn()
             ?.left()
             ?.left()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(0, 0),
-            Point.of(1, 0),
-            Point.of(2, 0),
-            Point.of(1, 1)
-        )))
+            ?.left()
+            ?.left()
+            ?.left()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(0, 0),
+                Point(0, 1),
+                Point(0, 2),
+                Point(1, 1)
+            )
+        )
     }
 
     @Test
@@ -124,38 +156,75 @@ class BoardTest {
             .of(nextShape)
             .drop()
             ?.drop()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(2, 16),
-            Point.of(3, 16),
-            Point.of(4, 16),
-            Point.of(2, 17),
-            Point.of(2, 18),
-            Point.of(3, 18),
-            Point.of(4, 18),
-            Point.of(2, 19)
-        ) + shape))
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1),
+                Point(4, 16),
+                Point(3, 17),
+                Point(4, 17),
+                Point(5, 17),
+                Point(4, 18),
+                Point(3, 19),
+                Point(4, 19),
+                Point(5, 19)
+            )
+        )
     }
 
     @Test
     fun shouldCompleteALine() {
         val board = Board
             .of(nextShape)
-            .left()?.left()
+            .left()?.left()?.left()?.drop()
             ?.drop()
-            ?.right()
-            ?.drop()
-            ?.right()?.right()?.right()?.right()
-            ?.drop()
-            ?.down()?.turn()?.right()?.right()?.right()?.right()?.right()?.right()
-            ?.drop()
-        assertThat(board?.points(), equalTo(setOf(
-            Point.of(1, 19),
-            Point.of(4, 19),
-            Point.of(7, 19),
-            Point.of(8, 18),
-            Point.of(9, 18),
-            Point.of(9, 17)
-        ) + shape))
+            ?.right()?.right()?.right()?.drop()
+            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1),
+                Point(1, 19),
+                Point(4, 19),
+                Point(7, 19),
+                Point(8, 19),
+                Point(9, 19),
+                Point(9, 18)
+            )
+        )
+    }
+
+    @Test
+    fun shouldCompleteASuspendedLine() {
+        val board = Board
+            .of(nextShape)
+            .turn()?.turn()?.left()?.left()?.left()?.drop()
+            ?.turn()?.turn()?.drop()
+            ?.turn()?.turn()?.right()?.right()?.right()?.drop()
+            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1),
+                Point(1, 19),
+                Point(4, 19),
+                Point(7, 19),
+                Point(8, 18),
+                Point(9, 18),
+                Point(9, 17)
+            )
+        )
     }
 
     @Test
@@ -172,6 +241,37 @@ class BoardTest {
             ?.drop()
             ?.drop()
             ?.drop()
+            ?.drop()
         assertThat(board, nullValue())
+    }
+
+    private fun checkPointsAndRender(maybeBoard: Board?, expectedPoints: Set<Point>) {
+        val board = maybeBoard ?: throw AssertionFailedError("unexpected game over")
+        var correct = true
+        println(" ----------")
+        (0 until 20).forEach { y ->
+            print("|")
+            (0 until 10).forEach { x ->
+                if (board.filledAt(x, y)) {
+                    if (expectedPoints.contains(Point(x, y))) {
+                        print("*")
+                    } else {
+                        print("a")
+                        correct = false
+                    }
+
+                } else {
+                    if (expectedPoints.contains(Point(x, y))) {
+                        print("e")
+                        correct = false
+                    } else {
+                        print(" ")
+                    }
+                }
+            }
+            println("|")
+        }
+        println(" ----------")
+        assertThat(correct, equalTo(true))
     }
 }

@@ -1,48 +1,72 @@
 package com.wjrb.tetris
 
-class Board(private val nextShape: () -> Shape, private val shape: Shape, private val fixedPoints: Set<Point>) {
+class Board(
+    private val nextShape: () -> Shape,
+    private val currentShape: Shape = nextShape.invoke(),
+    private val deadPoints: Array<BooleanArray> = Array(10) { BooleanArray(20) },
+    private val rotations: Int = 0,
+    private val currentShapeXTranslation: Int = 0,
+    private val currentShapeYTranslation: Int = 0
+) {
     companion object Factory {
-        fun of(nextShape: () -> Shape) = Board(nextShape, nextShape.invoke(), setOf())
+        fun of(nextShape: () -> Shape) =
+            Board(nextShape)
     }
 
-    fun points(): Set<Point> = fixedPoints + shape.points
-
-    fun left(): Board? = process {
-        shape.points.mapNotNull {
-            it.shift(-1, 0)
+    fun filledAt(x: Int, y: Int): Boolean = deadPoints[x][y] || currentShape
+        .rotate(rotations)
+        .find { point ->
+            point.x + currentShapeXTranslation == x && point.y + currentShapeYTranslation == y
         }
+        .let { it != null }
+
+    fun left(): Board? = process(0, -1, 0)
+
+    fun right(): Board? = process(0, 1, 0)
+
+    fun turn(): Board? = process(1, 0, 0)
+
+    fun down(): Board? = process(0, 0, 1)
+
+    fun drop(): Board? = run {
+        val yDiff = currentShape
+            .rotate(rotations)
+            .map { point ->
+                val unavailableRow = (point.y + currentShapeYTranslation until 20)
+                    .find { y -> !validPlacement(0, 0, y) }
+                    ?: 20
+                val possibleDropDistance = unavailableRow - 1 - currentShapeYTranslation
+                possibleDropDistance
+            }
+            .min()
+            ?: 0
+        process(0, 0, yDiff)
     }
 
-    fun right(): Board? = process {
-        shape.points.mapNotNull {
-            it.shift(1, 0)
-        }
-    }
-
-    fun turn(): Board? = process {
-        shape.points.mapNotNull {
-            it.rotateAbout(shape.points[shape.centreIndex])
-        }
-    }
-
-    fun down(): Board? = process {
-        shape.points.mapNotNull {
-            it.shift(0, 1)
-        }
-    }
-
-    fun drop(): Board? = process {
-        throw UnsupportedOperationException()
-    }
-
-    private fun process(newPointsFunction: () -> List<Point>): Board? =
-        if (shape.points.intersect(fixedPoints).isNotEmpty()) null else {
-            val newPoints = newPointsFunction()
-            if (newPoints.size < shape.points.size || newPoints.intersect(fixedPoints).isNotEmpty()) {
+    private fun process(rotationsDiff: Int, xDiff: Int, yDiff: Int): Board? =
+        if (!validPlacement(0, 0, 0)) null else {
+            if (!validPlacement(rotationsDiff, xDiff, yDiff)) {
                 this
             } else {
-                Board(nextShape, Shape(shape.centreIndex, newPoints), fixedPoints)
+                if (!validPlacement(0, xDiff, yDiff + 1)) {
+                    currentShape.rotate(rotations).forEach{point ->
+                        deadPoints[point.x + currentShapeXTranslation + xDiff][point.y + currentShapeYTranslation + yDiff] = true
+                    }
+                    Board(nextShape, nextShape.invoke(), deadPoints, 0, 0, 0)
+                } else {
+                    Board(nextShape, currentShape, deadPoints, rotations + rotationsDiff, currentShapeXTranslation + xDiff, currentShapeYTranslation + yDiff)
+                }
             }
         }
+
+    private fun validPlacement(rotationsDiff: Int, xDiff: Int, yDiff: Int) =
+        currentShape
+            .rotate(rotations + rotationsDiff)
+            .all { point ->
+                val newX = point.x + currentShapeXTranslation + xDiff
+                val newY = point.y + currentShapeYTranslation + yDiff
+                newX >= 0 && newX < 10 && newY >=0 && newY < 20 && !deadPoints[newX][newY]
+            }
+
 }
 
