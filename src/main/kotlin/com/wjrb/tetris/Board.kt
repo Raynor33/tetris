@@ -50,7 +50,18 @@ class Board(
             } else {
                 if (!validPlacement(0, xDiff, yDiff + 1)) {
                     currentShape.rotate(rotations).forEach{point ->
-                        deadPoints[point.x + currentShapeXTranslation + xDiff][point.y + currentShapeYTranslation + yDiff] = true
+                        val x = point.x + currentShapeXTranslation + xDiff
+                        val y = point.y + currentShapeYTranslation + yDiff
+                        deadPoints[x][y] = true
+                    }
+                    var totalComplete = 0
+                    (19 downTo 0).forEach { y ->
+                        val complete = (0 until 10).all { x -> deadPoints[x][y] }
+                        if (complete) {
+                            totalComplete += 1
+                        } else {
+                            (0 until 10).forEach { x -> deadPoints[x][y + totalComplete] = deadPoints[x][y] }
+                        }
                     }
                     Board(nextShape, nextShape.invoke(), deadPoints, 0, 0, 0)
                 } else {

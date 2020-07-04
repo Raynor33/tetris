@@ -57,6 +57,23 @@ class BoardTest {
     }
 
     @Test
+    fun shouldMoveTheShapeRightThenRight() {
+        val board = Board
+            .of(nextShape)
+            .left()
+            ?.right()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1)
+            )
+        )
+    }
+
+    @Test
     fun shouldMoveTheShapeDown() {
         val board = Board
             .of(nextShape)
@@ -176,6 +193,35 @@ class BoardTest {
     }
 
     @Test
+    fun shouldDropTheShapeDownOntoASuspendedBlock() {
+        val board = Board
+            .of(nextShape)
+            .turn()
+            ?.turn()
+            ?.drop()
+            ?.right()
+            ?.right()
+            ?.drop()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1),
+                Point(6, 16),
+                Point(5, 17),
+                Point(6, 17),
+                Point(7, 17),
+                Point(3, 18),
+                Point(4, 18),
+                Point(5, 18),
+                Point(4, 19)
+            )
+        )
+    }
+
+    @Test
     fun shouldCompleteALine() {
         val board = Board
             .of(nextShape)
@@ -197,6 +243,26 @@ class BoardTest {
                 Point(8, 19),
                 Point(9, 19),
                 Point(9, 18)
+            )
+        )
+    }
+
+    @Test
+    fun shouldCompleteMultipleLines() {
+        val board = Board
+            .of {Shape.O}
+            .left()?.left()?.left()?.left()?.drop()
+            ?.left()?.left()?.drop()
+            ?.drop()
+            ?.right()?.right()?.drop()
+            ?.right()?.right()?.right()?.right()?.drop()
+        checkPointsAndRender(
+            board,
+            setOf(
+                Point(4, 0),
+                Point(5, 0),
+                Point(4, 1),
+                Point(5, 1)
             )
         )
     }
