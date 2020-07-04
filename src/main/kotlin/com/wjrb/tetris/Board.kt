@@ -49,21 +49,22 @@ class Board(
                 this
             } else {
                 if (!validPlacement(0, xDiff, yDiff + 1)) {
+                    val newDeadPoints = deadPoints.map { it.clone() }.toTypedArray()
                     currentShape.rotate(rotations).forEach{point ->
                         val x = point.x + currentShapeXTranslation + xDiff
                         val y = point.y + currentShapeYTranslation + yDiff
-                        deadPoints[x][y] = true
+                        newDeadPoints[x][y] = true
                     }
                     var totalComplete = 0
                     (19 downTo 0).forEach { y ->
-                        val complete = (0 until 10).all { x -> deadPoints[x][y] }
+                        val complete = (0 until 10).all { x -> newDeadPoints[x][y] }
                         if (complete) {
                             totalComplete += 1
                         } else {
-                            (0 until 10).forEach { x -> deadPoints[x][y + totalComplete] = deadPoints[x][y] }
+                            (0 until 10).forEach { x -> newDeadPoints[x][y + totalComplete] = newDeadPoints[x][y] }
                         }
                     }
-                    Board(nextShape, nextShape.invoke(), deadPoints, 0, 0, 0)
+                    Board(nextShape, nextShape.invoke(), newDeadPoints, 0, 0, 0)
                 } else {
                     Board(nextShape, currentShape, deadPoints, rotations + rotationsDiff, currentShapeXTranslation + xDiff, currentShapeYTranslation + yDiff)
                 }

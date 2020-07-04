@@ -250,7 +250,7 @@ class BoardTest {
     @Test
     fun shouldCompleteMultipleLines() {
         val board = Board
-            .of {Shape.O}
+            .of { Shape.O }
             .left()?.left()?.left()?.left()?.drop()
             ?.left()?.left()?.drop()
             ?.drop()
@@ -309,6 +309,57 @@ class BoardTest {
             ?.drop()
             ?.drop()
         assertThat(board, nullValue())
+    }
+
+    @Test
+    fun shouldBeImmutableWhenMoving() {
+        val board = Board
+            .of(nextShape)
+        board
+            .left()
+        checkPointsAndRender(
+            board, setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1)
+            )
+        )
+    }
+
+    @Test
+    fun shouldBeImmutableWhenAddingDeadPoints() {
+        val board = Board
+            .of(nextShape)
+        board
+            .drop()
+        checkPointsAndRender(
+            board, setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1)
+            )
+        )
+    }
+
+    @Test
+    fun shouldBeImmutableWhenCompletingLines() {
+        val board = Board
+            .of(nextShape)
+        board
+            .left()?.left()?.left()?.drop()
+            ?.drop()
+            ?.right()?.right()?.right()?.drop()
+            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+        checkPointsAndRender(
+            board, setOf(
+                Point(4, 0),
+                Point(3, 1),
+                Point(4, 1),
+                Point(5, 1)
+            )
+        )
     }
 
     private fun checkPointsAndRender(maybeBoard: Board?, expectedPoints: Set<Point>) {
