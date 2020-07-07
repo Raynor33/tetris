@@ -3,7 +3,6 @@ package com.wjrb.tetris
 import junit.framework.AssertionFailedError
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
-import org.hamcrest.Matchers.nullValue
 import org.junit.Test
 
 class BoardTest {
@@ -61,7 +60,7 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .left()
-            ?.right()
+            .right()
         checkPointsAndRender(
             board,
             setOf(
@@ -93,7 +92,7 @@ class BoardTest {
     fun shouldTurnTheShape() {
         val board = Board
             .of(nextShape)
-            .turn()
+            .rotate()
         checkPointsAndRender(
             board,
             setOf(
@@ -129,12 +128,12 @@ class BoardTest {
     fun shouldNotTurnTheShapeOffTheBoard() {
         val board = Board
             .of(nextShape)
-            .turn()
-            ?.left()
-            ?.left()
-            ?.left()
-            ?.left()
-            ?.turn()
+            .rotate()
+            .left()
+            .left()
+            .left()
+            .left()
+            .rotate()
         checkPointsAndRender(
             board,
             setOf(
@@ -150,12 +149,12 @@ class BoardTest {
     fun shouldNotMoveTheShapeOffTheBoard() {
         val board = Board
             .of(nextShape)
-            .turn()
-            ?.left()
-            ?.left()
-            ?.left()
-            ?.left()
-            ?.left()
+            .rotate()
+            .left()
+            .left()
+            .left()
+            .left()
+            .left()
         checkPointsAndRender(
             board,
             setOf(
@@ -172,7 +171,7 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .drop()
-            ?.drop()
+            .drop()
         checkPointsAndRender(
             board,
             setOf(
@@ -196,12 +195,12 @@ class BoardTest {
     fun shouldDropTheShapeDownOntoASuspendedBlock() {
         val board = Board
             .of(nextShape)
-            .turn()
-            ?.turn()
-            ?.drop()
-            ?.right()
-            ?.right()
-            ?.drop()
+            .rotate()
+            .rotate()
+            .drop()
+            .right()
+            .right()
+            .drop()
         checkPointsAndRender(
             board,
             setOf(
@@ -225,10 +224,10 @@ class BoardTest {
     fun shouldCompleteALine() {
         val board = Board
             .of(nextShape)
-            .left()?.left()?.left()?.drop()
-            ?.drop()
-            ?.right()?.right()?.right()?.drop()
-            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+            .left().left().left().drop()
+            .drop()
+            .right().right().right().drop()
+            .rotate().rotate().rotate().right().right().right().right().right().drop()
 
         checkPointsAndRender(
             board,
@@ -251,11 +250,11 @@ class BoardTest {
     fun shouldCompleteMultipleLines() {
         val board = Board
             .of { Shape.O }
-            .left()?.left()?.left()?.left()?.drop()
-            ?.left()?.left()?.drop()
-            ?.drop()
-            ?.right()?.right()?.drop()
-            ?.right()?.right()?.right()?.right()?.drop()
+            .left().left().left().left().drop()
+            .left().left().drop()
+            .drop()
+            .right().right().drop()
+            .right().right().right().right().drop()
         checkPointsAndRender(
             board,
             setOf(
@@ -271,10 +270,10 @@ class BoardTest {
     fun shouldCompleteASuspendedLine() {
         val board = Board
             .of(nextShape)
-            .turn()?.turn()?.left()?.left()?.left()?.drop()
-            ?.turn()?.turn()?.drop()
-            ?.turn()?.turn()?.right()?.right()?.right()?.drop()
-            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+            .rotate().rotate().left().left().left().drop()
+            .rotate().rotate().drop()
+            .rotate().rotate().right().right().right().drop()
+            .rotate().rotate().rotate().right().right().right().right().right().drop()
 
         checkPointsAndRender(
             board,
@@ -298,17 +297,17 @@ class BoardTest {
         val board = Board
             .of(nextShape)
             .drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-            ?.drop()
-        assertThat(board, nullValue())
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+            .drop()
+        assertThat(board.complete(), equalTo(true))
     }
 
     @Test
@@ -348,10 +347,10 @@ class BoardTest {
         val board = Board
             .of(nextShape)
         board
-            .left()?.left()?.left()?.drop()
-            ?.drop()
-            ?.right()?.right()?.right()?.drop()
-            ?.turn()?.turn()?.turn()?.right()?.right()?.right()?.right()?.right()?.drop()
+            .left().left().left().drop()
+            .drop()
+            .right().right().right().drop()
+            .rotate().rotate().rotate().right().right().right().right().right().drop()
         checkPointsAndRender(
             board, setOf(
                 Point(4, 0),
@@ -362,8 +361,78 @@ class BoardTest {
         )
     }
 
-    private fun checkPointsAndRender(maybeBoard: Board?, expectedPoints: Set<Point>) {
-        val board = maybeBoard ?: throw AssertionFailedError("unexpected game over")
+    @Test
+    fun shouldBuildUpPossibleOutcomes() {
+        val board: Board = Board.of { Shape.T }
+        val outcomes = board.possibleOutcomes()
+
+        val expectedOutcomes = setOf(
+            setOf(Point(0, 19), Point(1, 19), Point(2, 19), Point(1, 18)),
+            setOf(Point(1, 19), Point(2, 19), Point(3, 19), Point(2, 18)),
+            setOf(Point(2, 19), Point(3, 19), Point(4, 19), Point(3, 18)),
+            setOf(Point(3, 19), Point(4, 19), Point(5, 19), Point(4, 18)),
+            setOf(Point(4, 19), Point(5, 19), Point(6, 19), Point(5, 18)),
+            setOf(Point(5, 19), Point(6, 19), Point(7, 19), Point(6, 18)),
+            setOf(Point(6, 19), Point(7, 19), Point(8, 19), Point(7, 18)),
+            setOf(Point(7, 19), Point(8, 19), Point(9, 19), Point(8, 18)),
+
+            setOf(Point(0, 19), Point(0, 18), Point(0, 17), Point(1, 18)),
+            setOf(Point(1, 19), Point(1, 18), Point(1, 17), Point(2, 18)),
+            setOf(Point(2, 19), Point(2, 18), Point(2, 17), Point(3, 18)),
+            setOf(Point(3, 19), Point(3, 18), Point(3, 17), Point(4, 18)),
+            setOf(Point(4, 19), Point(4, 18), Point(4, 17), Point(5, 18)),
+            setOf(Point(5, 19), Point(5, 18), Point(5, 17), Point(6, 18)),
+            setOf(Point(6, 19), Point(6, 18), Point(6, 17), Point(7, 18)),
+            setOf(Point(7, 19), Point(7, 18), Point(7, 17), Point(8, 18)),
+            setOf(Point(8, 19), Point(8, 18), Point(8, 17), Point(9, 18)),
+
+            setOf(Point(0, 18), Point(1, 18), Point(2, 18), Point(1, 19)),
+            setOf(Point(1, 18), Point(2, 18), Point(3, 18), Point(2, 19)),
+            setOf(Point(2, 18), Point(3, 18), Point(4, 18), Point(3, 19)),
+            setOf(Point(3, 18), Point(4, 18), Point(5, 18), Point(4, 19)),
+            setOf(Point(4, 18), Point(5, 18), Point(6, 18), Point(5, 19)),
+            setOf(Point(5, 18), Point(6, 18), Point(7, 18), Point(6, 19)),
+            setOf(Point(6, 18), Point(7, 18), Point(8, 18), Point(7, 19)),
+            setOf(Point(7, 18), Point(8, 18), Point(9, 18), Point(8, 19)),
+
+            setOf(Point(1, 19), Point(1, 18), Point(1, 17), Point(0, 18)),
+            setOf(Point(2, 19), Point(2, 18), Point(2, 17), Point(1, 18)),
+            setOf(Point(3, 19), Point(3, 18), Point(3, 17), Point(2, 18)),
+            setOf(Point(4, 19), Point(4, 18), Point(4, 17), Point(3, 18)),
+            setOf(Point(5, 19), Point(5, 18), Point(5, 17), Point(4, 18)),
+            setOf(Point(6, 19), Point(6, 18), Point(6, 17), Point(5, 18)),
+            setOf(Point(7, 19), Point(7, 18), Point(7, 17), Point(6, 18)),
+            setOf(Point(8, 19), Point(8, 18), Point(8, 17), Point(7, 18)),
+            setOf(Point(9, 19), Point(9, 18), Point(9, 17), Point(8, 18))
+        )
+
+        val actualOutcomes = outcomes
+            .map {
+                it.deadPoints
+                    .mapIndexed { x, ys ->
+                        ys.mapIndexed { y, present ->
+                            if (present) Point(x, y) else null
+                        }
+                    }
+                    .flatten()
+                    .filterNotNull()
+                    .toSet()
+            }
+            .toSet()
+
+        assertThat(actualOutcomes, equalTo(expectedOutcomes))
+
+        outcomes.forEach {
+            val actualResult = it.instructions.fold(board, { b, instruction -> instruction.applyTo(b) })
+            assertThat(
+                Array(10) { x -> BooleanArray(20) { y -> actualResult.filledAt(x, y) } },
+                equalTo(it.deadPoints)
+            )
+        }
+    }
+
+    private fun checkPointsAndRender(board: Board, expectedPoints: Set<Point>) {
+        val board = board
         var correct = true
         println(" ----------")
         (0 until 20).forEach { y ->
@@ -390,5 +459,6 @@ class BoardTest {
         }
         println(" ----------")
         assertThat(correct, equalTo(true))
+        assertThat(board.complete(), equalTo(false))
     }
 }

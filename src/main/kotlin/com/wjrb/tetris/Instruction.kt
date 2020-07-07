@@ -1,4 +1,4 @@
-package com.wjrb.tetris.bot
+package com.wjrb.tetris
 
 import com.wjrb.tetris.Board
 
@@ -9,7 +9,7 @@ enum class Instruction {
     RIGHT {
         override fun applyTo(board: Board) = board.right()
     },
-    TURN {
+    ROTATE {
         override fun applyTo(board: Board) = board.rotate()
     },
     DOWN {
