@@ -1,6 +1,5 @@
 package com.wjrb.tetris
 
-import junit.framework.AssertionFailedError
 import org.hamcrest.MatcherAssert.assertThat
 import org.hamcrest.Matchers.equalTo
 import org.junit.Test
@@ -432,7 +431,6 @@ class BoardTest {
     }
 
     private fun checkPointsAndRender(board: Board, expectedPoints: Set<Point>) {
-        val board = board
         var correct = true
         println(" ----------")
         (0 until 20).forEach { y ->
