@@ -363,7 +363,7 @@ class BoardTest {
     @Test
     fun shouldBuildUpPossibleOutcomes() {
         val board: Board = Board.of { Shape.T }
-        val outcomes = board.possibleOutcomes()
+        val outcomes = board.possibleOutcomes().toList()
 
         val expectedOutcomes = setOf(
             setOf(Point(0, 19), Point(1, 19), Point(2, 19), Point(1, 18)),
@@ -406,14 +406,12 @@ class BoardTest {
         )
 
         val actualOutcomes = outcomes
-            .map {
-                it.deadPoints
-                    .mapIndexed { x, ys ->
-                        ys.mapIndexed { y, present ->
-                            if (present) Point(x, y) else null
-                        }
+            .map { outcome ->
+                (0 until 10)
+                    .flatMap { x ->
+                        (0 until 20)
+                            .map { y -> if (outcome.filledAt(x, y)) Point(x, y) else null }
                     }
-                    .flatten()
                     .filterNotNull()
                     .toSet()
             }
@@ -421,13 +419,26 @@ class BoardTest {
 
         assertThat(actualOutcomes, equalTo(expectedOutcomes))
 
-        outcomes.forEach {
-            val actualResult = it.instructions.fold(board, { b, instruction -> instruction.applyTo(b) })
-            assertThat(
-                Array(10) { x -> BooleanArray(20) { y -> actualResult.filledAt(x, y) } },
-                equalTo(it.deadPoints)
-            )
+        outcomes.forEach { outcome ->
+            val actualResult = outcome.instructions().fold(board, { b, instruction -> instruction.applyTo(b) })
+            checkPointsAndRender(actualResult, outcome)
         }
+    }
+
+    private fun checkPointsAndRender(board: Board, shapeOutcome: ShapeOutcome) {
+        checkPointsAndRender(
+            board,
+            (0 until 10).flatMap { x ->
+                (0 until 20).map { y ->
+                    if (shapeOutcome.filledAt(x, y)) Point(
+                        x,
+                        y
+                    ) else null
+                }
+            }
+                .filterNotNull()
+                .toSet() + Shape.T.rotate(0)
+        )
     }
 
     private fun checkPointsAndRender(board: Board, expectedPoints: Set<Point>) {

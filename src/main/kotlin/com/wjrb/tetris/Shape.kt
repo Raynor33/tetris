@@ -41,6 +41,17 @@ enum class Shape(val rotationStages: List<Set<Point>>) {
         setOf(Point(4,0), Point(4, 1), Point(4, 2), Point(4, 3))
     ));
 
-    fun rotate(times: Int): Set<Point> = rotationStages[times % 4]
+    private val leftMostPointXs = rotationStages
+        .map { points -> points.minBy { it.x } ?.x ?: throw IllegalStateException("A shape must have at least one rotation stage") }
+        .toIntArray()
+    private val rightMostPointXs = rotationStages
+        .map { points -> points.maxBy { it.x } ?.x ?: throw IllegalStateException("A shape must have at least one rotation stage") }
+        .toIntArray()
+
+    fun rotate(times: Int) = rotationStages[times % 4]
+
+    fun leftMostPointX(rotationTimes: Int) = leftMostPointXs[rotationTimes % 4]
+
+    fun rightMostPointX(rotationTimes: Int) = rightMostPointXs[rotationTimes % 4]
 }
 

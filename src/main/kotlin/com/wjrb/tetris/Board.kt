@@ -28,45 +28,55 @@ class Board(
 
     fun down() = process(0, 0, 1)
 
-    fun drop() = run {
-        val yDiff = currentShape
-            .rotate(rotations)
-            .map { point ->
-                val unavailableRow = (point.y + currentShapeYTranslation until 20)
-                    .find { y -> !validPlacement(0, 0, y) }
-                    ?: 20
-                val possibleDropDistance = unavailableRow - 1 - currentShapeYTranslation
-                possibleDropDistance
-            }
-            .min()
-            ?: 0
-        process(0, 0, yDiff)
-    }
+    fun drop() = process(0, 0, dropDistance(0, 0))
 
     fun complete() = !validPlacement(0, 0, 0)
 
-    fun possibleOutcomes(): Set<ShapeOutcome> = setOf()
+    fun possibleOutcomes(): Iterable<ShapeOutcome> = Iterable {
+        object : Iterator<ShapeOutcome> {
+            var rotationsDiff = 0
+            var xDiff = currentShapeXTranslation - currentShape.leftMostPointX(rotations + rotationsDiff)
+            var hasNext = true
+
+            override fun hasNext(): Boolean = hasNext
+
+            override fun next(): ShapeOutcome = object : ShapeOutcome(rotationsDiff, xDiff) {
+                val newDeadPoints = newDeadPoints(
+                    rotations + rotationsDiff,
+                    currentShapeXTranslation + xDiff,
+                    dropDistance(rotationsDiff, xDiff)
+                )
+
+                init {
+                    if (currentShape.rightMostPointX(rotations + rotationsDiff) + xDiff == 9) {
+                        if (rotationsDiff == 3) {
+                            hasNext = false
+                        } else {
+                            rotationsDiff += 1
+                            xDiff = currentShapeXTranslation - currentShape.leftMostPointX(rotations + rotationsDiff)
+                        }
+                    } else {
+                        xDiff += 1
+                    }
+                }
+
+                override fun filledAt(x: Int, y: Int): Boolean {
+                    return newDeadPoints[x][y]
+                }
+            }
+        }
+    }
 
     private fun process(rotationsDiff: Int, xDiff: Int, yDiff: Int): Board =
         if (complete() || !validPlacement(rotationsDiff, xDiff, yDiff)) {
             this
         } else {
             if (!validPlacement(0, xDiff, yDiff + 1)) {
-                val newDeadPoints = deadPoints.map { it.clone() }.toTypedArray()
-                currentShape.rotate(rotations).forEach { point ->
-                    val x = point.x + currentShapeXTranslation + xDiff
-                    val y = point.y + currentShapeYTranslation + yDiff
-                    newDeadPoints[x][y] = true
-                }
-                var totalComplete = 0
-                (19 downTo 0).forEach { y ->
-                    val complete = (0 until 10).all { x -> newDeadPoints[x][y] }
-                    if (complete) {
-                        totalComplete += 1
-                    } else {
-                        (0 until 10).forEach { x -> newDeadPoints[x][y + totalComplete] = newDeadPoints[x][y] }
-                    }
-                }
+                val newDeadPoints = newDeadPoints(
+                    rotations + rotationsDiff,
+                    currentShapeXTranslation + xDiff,
+                    currentShapeYTranslation + yDiff
+                )
                 Board(nextShape, nextShape.invoke(), newDeadPoints, 0, 0, 0)
             } else {
                 Board(
@@ -79,6 +89,32 @@ class Board(
                 )
             }
         }
+
+    private fun dropDistance(rotationsDiff: Int, xDiff: Int): Int =
+        ((0 until 20)
+            .find { y -> !validPlacement(rotationsDiff, xDiff, y) }
+            ?: 20) - 1
+
+    private fun newDeadPoints(totalRotations: Int, totalXDiff: Int, totalYDiff: Int): Array<BooleanArray> {
+        val newDeadPoints = deadPoints.map { it.clone() }.toTypedArray()
+        var lowestRow = 0
+        currentShape.rotate(totalRotations).forEach { point ->
+            val x = point.x + totalXDiff
+            val y = point.y + totalYDiff
+            newDeadPoints[x][y] = true
+            lowestRow = if (y > lowestRow) y else lowestRow
+        }
+        var totalComplete = 0
+        (lowestRow downTo 0).forEach { y ->
+            val complete = (0 until 10).all { x -> newDeadPoints[x][y] }
+            if (complete) {
+                totalComplete += 1
+            } else {
+                (0 until 10).forEach { x -> newDeadPoints[x][y + totalComplete] = newDeadPoints[x][y] }
+            }
+        }
+        return newDeadPoints
+    }
 
     private fun validPlacement(rotationsDiff: Int, xDiff: Int, yDiff: Int) =
         currentShape
