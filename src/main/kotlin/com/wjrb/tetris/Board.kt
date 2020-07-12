@@ -71,7 +71,7 @@ class Board(
         if (complete() || !validPlacement(rotationsDiff, xDiff, yDiff)) {
             this
         } else {
-            if (!validPlacement(0, xDiff, yDiff + 1)) {
+            if (!validPlacement(rotationsDiff, xDiff, yDiff + 1)) {
                 val newDeadPoints = newDeadPoints(
                     rotations + rotationsDiff,
                     currentShapeXTranslation + xDiff,
@@ -91,16 +91,16 @@ class Board(
         }
 
     private fun dropDistance(rotationsDiff: Int, xDiff: Int): Int =
-        ((0 until 20)
-            .find { y -> !validPlacement(rotationsDiff, xDiff, y) }
-            ?: 20) - 1
+        (0 until 19)
+            .find { y -> !validPlacement(rotationsDiff, xDiff, y + 1) }
+            ?: 19
 
-    private fun newDeadPoints(totalRotations: Int, totalXDiff: Int, totalYDiff: Int): Array<BooleanArray> {
+    private fun newDeadPoints(totalRotations: Int, totalXTranslation: Int, totalYTranslation: Int): Array<BooleanArray> {
         val newDeadPoints = deadPoints.map { it.clone() }.toTypedArray()
         var lowestRow = 0
         currentShape.rotate(totalRotations).forEach { point ->
-            val x = point.x + totalXDiff
-            val y = point.y + totalYDiff
+            val x = point.x + totalXTranslation
+            val y = point.y + totalYTranslation
             newDeadPoints[x][y] = true
             lowestRow = if (y > lowestRow) y else lowestRow
         }
